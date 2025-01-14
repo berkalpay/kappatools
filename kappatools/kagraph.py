@@ -3,7 +3,7 @@
 Convert a KappaMolecule into networkx graph and define some manipulations
 """
 import networkx as nx
-import kamol
+from . import kamol
 
 
 class KappaGraph:

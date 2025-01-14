@@ -7,8 +7,7 @@ import matplotlib.collections as artcoll
 import traceback
 import xlsxwriter as xlsx
 
-import kagraph
-import kamol
+from . import kagraph, kamol
 
 
 def show():

@@ -8,7 +8,7 @@ import re
 import os
 import json
 
-import kamol
+from . import kamol
 
 
 def load_and_unpack(kappa_file, system=None, local_views={}, signature=None, canon=True):
