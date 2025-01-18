@@ -9,11 +9,13 @@ from collections import deque
 # The graphs are given by the internal representation in 'kamol.KappaMolecule',
 # which, for the purpose of this code, behaves like a networkx graph.
 
+
 def print_map(maps):
     for i in range(0, len(maps)):
-        print(f'map {i + 1}:')
+        print(f"map {i + 1}:")
         for k, v in maps[i].items():
-            print(f'{k} --> {v}')
+            print(f"{k} --> {v}")
+
 
 # ================================================================================================
 # The rigid way... (site graphs only)
@@ -38,8 +40,8 @@ class SiteGraphMatcher:
     """
 
     def __init__(self):
-        self.p_start = ''
-        self.h_start = ''
+        self.p_start = ""
+        self.h_start = ""
         # tentative subgraph embedding; if pattern lacks a bond that host has, it's OK
         self.sub = False
         self.mapping = {}
@@ -67,7 +69,10 @@ class SiteGraphMatcher:
             for node in lst:
                 if self._embed(pattern, pattern, h_start=node):
                     # sort sensibly for readability
-                    self.mapping = {k: v for k, v in sorted(self.mapping.items(), key=lambda x: x[0])}
+                    self.mapping = {
+                        k: v
+                        for k, v in sorted(self.mapping.items(), key=lambda x: x[0])
+                    }
                     # the rigidity approach never produces identical embeddings
                     mappings += [self.mapping]
         return mappings
@@ -134,7 +139,10 @@ class SiteGraphMatcher:
             for node in lst:
                 if self._embed(host, pattern, h_start=node):
                     # sort sensibly for readability
-                    self.mapping = {k: v for k, v in sorted(self.mapping.items(), key=lambda x: x[0])}
+                    self.mapping = {
+                        k: v
+                        for k, v in sorted(self.mapping.items(), key=lambda x: x[0])
+                    }
                     # the rigidity approach never produces identical embeddings
                     mappings += [self.mapping]
         return mappings
@@ -179,7 +187,7 @@ class SiteGraphMatcher:
         stack = deque()
         visited = set()
         # stack (current pattern node, predecessor, current host node)
-        stack.append((p_node, '', h_node))
+        stack.append((p_node, "", h_node))
         while stack:
             p_node, parent_p_node, h_node = stack.pop()
             if p_node not in visited:
@@ -189,7 +197,9 @@ class SiteGraphMatcher:
                     # the agent that is bound on that site but in the host graph
                     # (it doesn't matter if there are multiple bonds between two nodes; all we care about
                     # is reaching the node in host that must be matched against the node in pattern.)
-                    h_node, x, x = host.agents[h_node]['iface'][site]['bond'].partition(pattern.bond_sep)
+                    h_node, x, x = host.agents[h_node]["iface"][site]["bond"].partition(
+                        pattern.bond_sep
+                    )
                 if self.node_match(host, pattern, h_node, p_node):
                     # update the mapping
                     self.mapping[p_node] = h_node
@@ -227,36 +237,36 @@ class SiteGraphMatcher:
         #
         # the prefix 'h' stands for 'host' and 'p' for 'pattern'
         # start with type match
-        h_node_type = host.agents[h_node]['info']['type']
-        p_node_type = pattern.agents[p_node]['info']['type']
+        h_node_type = host.agents[h_node]["info"]["type"]
+        p_node_type = pattern.agents[p_node]["info"]["type"]
         if h_node_type != p_node_type:
             return False
 
-        h_node_iface = host.agents[h_node]['iface']
-        p_node_iface = pattern.agents[p_node]['iface']
+        h_node_iface = host.agents[h_node]["iface"]
+        p_node_iface = pattern.agents[p_node]["iface"]
 
         for site_name in p_node_iface:
             if site_name not in h_node_iface:
                 return False
             else:
-                h_bond = h_node_iface[site_name]['bond']
-                p_bond = p_node_iface[site_name]['bond']
+                h_bond = h_node_iface[site_name]["bond"]
+                p_bond = p_node_iface[site_name]["bond"]
 
-                if p_bond == '.':
-                    if h_bond != '.':
+                if p_bond == ".":
+                    if h_bond != ".":
                         return False
-                elif p_bond == '#':  # don't care
+                elif p_bond == "#":  # don't care
                     return True
-                elif p_bond == '_':  # unspecific bond
-                    if h_bond == '.':
+                elif p_bond == "_":  # unspecific bond
+                    if h_bond == ".":
                         return False
                 else:  # specific bond
-                    if h_bond == '.':
+                    if h_bond == ".":
                         return False
                     else:
                         # both sites are bound
-                        p_partner, _, p_site = p_bond.partition('@')
-                        h_partner, _, h_site = h_bond.partition('@')
+                        p_partner, _, p_site = p_bond.partition("@")
+                        h_partner, _, h_site = h_bond.partition("@")
                         if p_partner in self.mapping:
                             if not (self.mapping[p_partner] == h_partner):
                                 return False
@@ -268,35 +278,38 @@ class SiteGraphMatcher:
     def node_match(self, host, pattern, h_node, p_node):
         # here, the prefix 'h' stands for 'host' and 'p' for 'pattern'
         # start with type match
-        h_node_type = host.agents[h_node]['info']['type']
-        p_node_type = pattern.agents[p_node]['info']['type']
+        h_node_type = host.agents[h_node]["info"]["type"]
+        p_node_type = pattern.agents[p_node]["info"]["type"]
         if h_node_type != p_node_type:
             return False
 
-        h_node_iface = host.agents[h_node]['iface']
-        p_node_iface = pattern.agents[p_node]['iface']
+        h_node_iface = host.agents[h_node]["iface"]
+        p_node_iface = pattern.agents[p_node]["iface"]
 
         for site_name in p_node_iface:
             if site_name not in h_node_iface:
                 return False
             else:
-                if p_node_iface[site_name]['state'] != '#':
-                    if p_node_iface[site_name]['state'] != h_node_iface[site_name]['state']:
+                if p_node_iface[site_name]["state"] != "#":
+                    if (
+                        p_node_iface[site_name]["state"]
+                        != h_node_iface[site_name]["state"]
+                    ):
                         return False
 
-                h_bond = h_node_iface[site_name]['bond']
-                p_bond = p_node_iface[site_name]['bond']
-                if '@' in h_bond:
+                h_bond = h_node_iface[site_name]["bond"]
+                p_bond = p_node_iface[site_name]["bond"]
+                if "@" in h_bond:
                     h_partner, x, h_site = h_bond.partition(host.bond_sep)
-                if '@' in p_bond:
+                if "@" in p_bond:
                     p_partner, x, p_site = p_bond.partition(pattern.bond_sep)
 
-                if p_bond == '.':
-                    if h_bond != '.':
+                if p_bond == ".":
+                    if h_bond != ".":
                         if not self.sub:
                             return False
-                elif '@' in p_bond:  # specific bond
-                    if not ('@' in h_bond):
+                elif "@" in p_bond:  # specific bond
+                    if not ("@" in h_bond):
                         return False
                     else:
                         # both sites are bound
@@ -305,28 +318,29 @@ class SiteGraphMatcher:
                                 return False
                         if h_site != p_site:
                             return False
-                elif p_bond == '_':  # unspecific bond
-                    if h_bond == '.':
+                elif p_bond == "_":  # unspecific bond
+                    if h_bond == ".":
                         return False
-                elif '.' in p_bond:  # stub ('.', as in free, is caught above)
-                    if h_bond == '.':  # the site is free
+                elif "." in p_bond:  # stub ('.', as in free, is caught above)
+                    if h_bond == ".":  # the site is free
                         return False
-                    elif h_bond == '_':
+                    elif h_bond == "_":
                         return False  # the pattern state is more specific (stub) than the host state
-                    elif '@' in h_bond:
-                        ghost_site, ghost_type = p_bond.split('.')
-                        h_type = h_partner.split('.')[0]
+                    elif "@" in h_bond:
+                        ghost_site, ghost_type = p_bond.split(".")
+                        h_type = h_partner.split(".")[0]
                         if ghost_type != h_type or ghost_site != h_site:
                             return False
-                    elif '.' in h_bond:  # h_bond is also a stub
+                    elif "." in h_bond:  # h_bond is also a stub
                         if p_bond != h_bond:
                             return False
         return True
 
+
 # -------------------------------------------------------------------------------------------
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import kamol
     import time
     import re
@@ -345,13 +359,13 @@ if __name__ == '__main__':
     # print_map(maps)
 
     SGM = SiteGraphMatcher()
-    G1 = kamol.KappaComplex('APC(pr{p})')
+    G1 = kamol.KappaComplex("APC(pr{p})")
     # G1 = kamol.KappaComplex('A(a[1],b[2]),A(a[1],b[3]),B(a[2],c[4]),B(a[3],c[5]),C(b[4],x{u}[.]),C(b[5],x{p}[.])')
     # G2 = kamol.KappaComplex('A(a[1],b[2]),A(a[1],b[3]),B(a[2],c[4]),B(a[3],c[5]),C(b[5],x{p}[.]),C(b[4],x{u}[.])')
     print(G1.show())
     # print(G2.show())
     maps = SGM.automorphisms(G1)
-    print(f'{len(maps)} automorphisms:')
+    print(f"{len(maps)} automorphisms:")
     print_map(maps)
     # maps = SGM.automorphisms(G2)
     # print(f'{len(maps)} automorphisms:')

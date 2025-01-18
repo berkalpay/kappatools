@@ -11,7 +11,9 @@ import json
 from . import kamol
 
 
-def load_and_unpack(kappa_file, system=None, local_views={}, signature=None, canon=True):
+def load_and_unpack(
+    kappa_file, system=None, local_views={}, signature=None, canon=True
+):
     """
     Load a Kappa snapshot file.
     Format:
@@ -40,19 +42,19 @@ def load_and_unpack(kappa_file, system=None, local_views={}, signature=None, can
         raise Exception("Cannot find snapshot file %s" % kappa_file)
     else:
         with open(kappa_file, "r") as data:
-            event = int(data.readline().split('Event:')[1][:-2].strip())
+            event = int(data.readline().split("Event:")[1][:-2].strip())
             uuid = data.readline().split('"uuid" : ')[1][1:-2]
             for i in range(0, 4):
                 peek = data.readline()
                 if "RG" in peek:
                     # RNG state
-                    rg_state = json.loads(peek.split('// RG state : ')[1][:-1])
+                    rg_state = json.loads(peek.split("// RG state : ")[1][:-1])
                 elif "T0" in peek:
-                    t = peek.split('T0')[1][:-2]
-                    time = float(re.sub(r'"', ' ', t).strip())
+                    t = peek.split("T0")[1][:-2]
+                    time = float(re.sub(r'"', " ", t).strip())
                 elif "LV" in peek:
                     # local views included
-                    lv = json.loads(peek.split('// LV : ')[1][:-1])
+                    lv = json.loads(peek.split("// LV : ")[1][:-1])
                 else:
                     break
             # data.readline()
@@ -62,14 +64,18 @@ def load_and_unpack(kappa_file, system=None, local_views={}, signature=None, can
                 if not entry:
                     break
                 # parse the entry
-                match = re.findall(r'%init: (.*?) \/\*(.*?) agents\*\/ (.*?)$', entry)[0]
+                match = re.findall(r"%init: (.*?) \/\*(.*?) agents\*\/ (.*?)$", entry)[
+                    0
+                ]
                 # build the internal representation
-                komplex = kamol.KappaMolecule(kappa.parser(match[2].strip()),
-                                              count=int(match[0]),
-                                              system=system,
-                                              sig=signature,
-                                              canon=canon,
-                                              s_views=lv)  # local_views 'lv' will be updated
+                komplex = kamol.KappaMolecule(
+                    kappa.parser(match[2].strip()),
+                    count=int(match[0]),
+                    system=system,
+                    sig=signature,
+                    canon=canon,
+                    s_views=lv,
+                )  # local_views 'lv' will be updated
                 complexes.append(komplex)
     del kappa
     return event, uuid, rg_state, time, complexes, lv
@@ -79,22 +85,22 @@ def next_complex_from_file(data):
     """
     Read an %init entry over multiple lines from a snapshot file.
     """
-    entry = ''
+    entry = ""
     first = True
     while True:
         last_pos = data.tell()
         line = data.readline()
         if not line:
             return entry
-        if '%init' in line:
-            if 'agents*/' in line:
+        if "%init" in line:
+            if "agents*/" in line:
                 if not first:
                     data.seek(last_pos)
                     break
                 else:
                     first = False
             else:
-                return ''
+                return ""
         entry = entry + line[:-1]  # remove \n
     return entry
 
@@ -122,7 +128,7 @@ def consolidate(complexes):
     n_complexes = len(complexes)
     for i in range(0, n_complexes):
         m1 = complexes[i]
-        for j in range(i+1, n_complexes):
+        for j in range(i + 1, n_complexes):
             m2 = complexes[j]
             if m2.count == 0:
                 continue
@@ -144,9 +150,17 @@ class SnapShot:
     Alternatively import an already-made list of KappaMolecules (complexes).
     """
 
-    def __init__(self, file=None, complexes=None, system=None, signature=None, canon=True, sort=False):
+    def __init__(
+        self,
+        file=None,
+        complexes=None,
+        system=None,
+        signature=None,
+        canon=True,
+        sort=False,
+    ):
         self.file = file
-        self.origin_uuid = ''
+        self.origin_uuid = ""
         self.rg_state = None
         self.time = 0
         self.event = 0
@@ -159,12 +173,21 @@ class SnapShot:
 
         if file:
             if self.file.endswith(".ka"):
-                value = load_and_unpack(file,
-                                        system=system,
-                                        local_views=self.local_views,
-                                        signature=signature,
-                                        canon=canon)
-                self.event, self.origin_uuid, self.rg_state, self.time, self.complexes, self.local_views = value
+                value = load_and_unpack(
+                    file,
+                    system=system,
+                    local_views=self.local_views,
+                    signature=signature,
+                    canon=canon,
+                )
+                (
+                    self.event,
+                    self.origin_uuid,
+                    self.rg_state,
+                    self.time,
+                    self.complexes,
+                    self.local_views,
+                ) = value
             else:
                 raise Exception("Unknown file extension %s" % self.file)
         elif complexes:
@@ -191,13 +214,16 @@ class SnapShot:
                 length[c.size] = c.count
 
         if dictionary:
-            d = {'size': [], 'count': []}
+            d = {"size": [], "count": []}
             for l, c in sorted(length.items(), key=lambda i: i[0], reverse=False):
-                d['size'].append(l)
-                d['count'].append(c)
+                d["size"].append(l)
+                d["count"].append(c)
             return d
         else:
-            return [(l, c) for l, c in sorted(length.items(), key=lambda i: i[0], reverse=False)]
+            return [
+                (l, c)
+                for l, c in sorted(length.items(), key=lambda i: i[0], reverse=False)
+            ]
 
     def __str__(self):
         self.snap_report()
@@ -228,23 +254,24 @@ class SnapShot:
 
         info += f'{"size distribution":>20}:\n'
         size_dist = self.get_size_distribution()
-        d1 = f'{size_dist[:4]}'
-        d2 = f'{size_dist[-4:]}'
-        info += f'{d1[1:-1]} ... {d2[1:-1]}'
-        info += '\n'
+        d1 = f"{size_dist[:4]}"
+        d2 = f"{size_dist[-4:]}"
+        info += f"{d1[1:-1]} ... {d2[1:-1]}"
+        info += "\n"
         return info
-        
+
+
 # -------------------------------------------------------------------------------------------
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    snap = SnapShot('TestData/snap__1773.ka')
-    print(f'number of species: {snap.number_of_species}')
-    print(f'number of local views at system level: {len(snap.local_views)}')
+    snap = SnapShot("TestData/snap__1773.ka")
+    print(f"number of species: {snap.number_of_species}")
+    print(f"number of local views at system level: {len(snap.local_views)}")
     print("size distribution")
     print(snap.get_size_distribution())
-    print(f'agents and molecules: {snap.count_agents_and_molecules()}')
+    print(f"agents and molecules: {snap.count_agents_and_molecules()}")
     print("All complexes share the system-wide local views:")
     claim = True
     first = True
@@ -257,4 +284,3 @@ if __name__ == '__main__':
                 break
         m_previous = m
     print("Claim is True.")
-

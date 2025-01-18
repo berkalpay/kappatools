@@ -6,18 +6,18 @@
 import matplotlib.pyplot as plt
 
 
-def show(pdf=''):
+def show(pdf=""):
     """
     :param pdf: if not '', write to pdf file
     """
-    if pdf == '':
+    if pdf == "":
         plt.show(block=False)
     else:
         plt.savefig(pdf)
 
 
 class XYplot:
-    def __init__(self, figsize=(10,8), params=None):
+    def __init__(self, figsize=(10, 8), params=None):
         """
         params: parameter dict to be passed to plot
         """
@@ -26,12 +26,13 @@ class XYplot:
         self.default_x = 0
         self.default_y = 1
         self.x_axis = None
-        self.title = ''
-        self.parameters = {'linestyle': '',
-                           'linewidth': 0.5,
-                           'marker': 'o',
-                           'label': ''
-                           }
+        self.title = ""
+        self.parameters = {
+            "linestyle": "",
+            "linewidth": 0.5,
+            "marker": "o",
+            "label": "",
+        }
         self.parameters = {**self.parameters, **params}
         self.parameters_save = self.parameters
         self.artists = {}
@@ -41,7 +42,7 @@ class XYplot:
         self.fig, self.ax = plt.subplots(figsize=figsize)
         self.overlay_axis = None
 
-    def add(self, df, x='', y='', title='', xmajor=0, ymajor=0, params=None):
+    def add(self, df, x="", y="", title="", xmajor=0, ymajor=0, params=None):
         """
         ymajor: multiple for major y-tick marks (0 for auto)
         xmajor: multiple for major x-tick marks (0 for auto)
@@ -55,32 +56,32 @@ class XYplot:
             params = {}
         self.parameters = {**self.parameters, **params}
         self.ncurve += 1
-        self.parameters['label'] = self.parameters['label'] + f' [{self.ncurve}]'
-        if x == '':
+        self.parameters["label"] = self.parameters["label"] + f" [{self.ncurve}]"
+        if x == "":
             for idx, c in enumerate(df.columns):
                 if idx == self.default_x:
                     x = c
                     break
         self.x_axis = x
 
-        if y == '':
+        if y == "":
             for idx, c in enumerate(df.columns):
                 if idx == self.default_y:
                     y = c
                     break
-        if title == '':
-            self.title = f'{x} vs {y}'
+        if title == "":
+            self.title = f"{x} vs {y}"
         else:
             self.title = title
 
-        arts, = self.ax.plot(df[x], df[y], **self.parameters)
+        (arts,) = self.ax.plot(df[x], df[y], **self.parameters)
         self.artists[self.ncurve] = arts
 
         if xmajor != 0:
             self.ax.xaxis.set_major_locator(plt.MultipleLocator(xmajor))
         if ymajor != 0:
             self.ax.yaxis.set_major_locator(plt.MultipleLocator(ymajor))
-        plt.grid(color='lightgrey')
+        plt.grid(color="lightgrey")
         self.ax.set_xlabel(x)
         self.ax.set_ylabel(y)
         self.ax.set_title(title)
@@ -88,7 +89,7 @@ class XYplot:
 
         self.parameters = self.parameters_save
 
-    def overlay(self, df, y='', ymajor=0, params={}, grid=False):
+    def overlay(self, df, y="", ymajor=0, params={}, grid=False):
         """
         grid:
         ymajor: multiple for major y-tick marks (0 for auto)
@@ -98,26 +99,28 @@ class XYplot:
         """
         self.parameters = {**self.parameters, **params}
         self.ncurve += 1
-        self.parameters['label'] = self.parameters['label'] + f' [{self.ncurve}]'
+        self.parameters["label"] = self.parameters["label"] + f" [{self.ncurve}]"
 
         if self.overlay_axis:
             self.overlay_axis.remove()
 
         self.overlay_axis = self.ax.twinx()  # a second axes that shares the same x-axis
 
-        if y == '':
+        if y == "":
             for idx, c in enumerate(df.columns):
                 if idx == self.default_y:
                     y = c
                     break
 
-        arts, = self.overlay_axis.plot(df[self.x_axis], df[y], 'o-', **self.parameters)
+        (arts,) = self.overlay_axis.plot(
+            df[self.x_axis], df[y], "o-", **self.parameters
+        )
         self.artists[self.ncurve] = arts
 
         if ymajor != 0:
             self.overlay_axis.yaxis.set_major_locator(plt.MultipleLocator(ymajor))
         if grid:
-            plt.grid(color='lightgrey')
+            plt.grid(color="lightgrey")
         self.overlay_axis.set_ylabel(y)
         self.fig.tight_layout()
 
@@ -135,17 +138,27 @@ class XYplot:
             self.legend.remove()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import pandas as pd
     import kasnap as ks
 
-    snap1 = ks.SnapShot('TestData/snap19.ka')
+    snap1 = ks.SnapShot("TestData/snap19.ka")
     sd_df1 = pd.DataFrame(snap1.get_size_distribution(dictionary=True))
-    plot = XYplot(params={'linestyle': '-', 'linewidth': 1., 'markersize': 0})
-    plot.add(sd_df1, xmajor=2, ymajor=2000, params={'label': 'snap19', 'color': 'r', 'markerfacecolor': 'r'})
+    plot = XYplot(params={"linestyle": "-", "linewidth": 1.0, "markersize": 0})
+    plot.add(
+        sd_df1,
+        xmajor=2,
+        ymajor=2000,
+        params={"label": "snap19", "color": "r", "markerfacecolor": "r"},
+    )
     # show()
-    snap2 = ks.SnapShot('TestData/snap98.ka')
+    snap2 = ks.SnapShot("TestData/snap98.ka")
     sd_df2 = pd.DataFrame(snap2.get_size_distribution(dictionary=True))
-    plot.add(sd_df2, xmajor=2, ymajor=2000, params={'label': 'snap98', 'color': 'g', 'markerfacecolor': 'g'})
+    plot.add(
+        sd_df2,
+        xmajor=2,
+        ymajor=2000,
+        params={"label": "snap98", "color": "g", "markerfacecolor": "g"},
+    )
     plot.ax.legend()
     show()

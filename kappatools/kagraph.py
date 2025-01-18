@@ -24,14 +24,14 @@ class KappaGraph:
             else:
                 self.nxGraph = nx.Graph()
             for (a1, s1), (a2, s2) in komplex.bonds:
-                txt = a1 + '@' + s1 + '--' + a2 + '@' + s2
+                txt = a1 + "@" + s1 + "--" + a2 + "@" + s2
                 self.nxGraph.add_edge(a1, a2, bond=txt)
 
         # set node attributes
         node_attributes = {}
         for node, node_data in self.nxGraph.nodes.items():
             name, id = kamol.get_identifier(node)
-            node_attributes[node] = {'type': name, 'id': id}
+            node_attributes[node] = {"type": name, "id": id}
         nx.set_node_attributes(self.nxGraph, node_attributes)
 
     def get_cycle(self):
@@ -40,7 +40,7 @@ class KappaGraph:
         Returns: list of tuples, such as [(0, 1), (1, 2), (0, 2)] or []
         """
         try:
-            cycle = nx.find_cycle(self.nxGraph, orientation='ignore')
+            cycle = nx.find_cycle(self.nxGraph, orientation="ignore")
             edge_list = []
             if cycle:
                 if len(cycle[0]) == 3:
@@ -115,10 +115,29 @@ class KappaGraph:
         for node in node_list:
             self.nxGraph.remove_node(node)
 
-    def write_dot(self, filename='complex.dot', uniform=True, shape='oval'):
-        palette = ('blue', 'red', 'green', 'cyan', 'magenta', 'yellow', 'khaki', 'silver')
-        shapelette = ('circle', 'triangle', 'polygon', 'oval', 'diamond', 'house', 'hexagon',
-                      'parallelogram', 'pentagon', 'rectangle')
+    def write_dot(self, filename="complex.dot", uniform=True, shape="oval"):
+        palette = (
+            "blue",
+            "red",
+            "green",
+            "cyan",
+            "magenta",
+            "yellow",
+            "khaki",
+            "silver",
+        )
+        shapelette = (
+            "circle",
+            "triangle",
+            "polygon",
+            "oval",
+            "diamond",
+            "house",
+            "hexagon",
+            "parallelogram",
+            "pentagon",
+            "rectangle",
+        )
         # assign colors to nodes
         color = {}
         shapes = {}
@@ -129,18 +148,22 @@ class KappaGraph:
             shapes[type] = i % len(shapelette)
             i += 1
         for node in self.nxGraph.nodes():
-            self.nxGraph.nodes[node]['style'] = 'filled'
-            self.nxGraph.nodes[node]['fillcolor'] = palette[color[self.nxGraph.nodes[node]['type']]]
+            self.nxGraph.nodes[node]["style"] = "filled"
+            self.nxGraph.nodes[node]["fillcolor"] = palette[
+                color[self.nxGraph.nodes[node]["type"]]
+            ]
             if not uniform:
-                self.nxGraph.nodes[node]['shape'] = shapelette[shapes[self.nxGraph.nodes[node]['type']]]
+                self.nxGraph.nodes[node]["shape"] = shapelette[
+                    shapes[self.nxGraph.nodes[node]["type"]]
+                ]
             else:
-                self.nxGraph.nodes[node]['shape'] = shape
+                self.nxGraph.nodes[node]["shape"] = shape
         nx.nx_agraph.write_dot(self.nxGraph, filename)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    ring = 'A(r[.] l[1]),A(r[1] l[2] m[7]),A(r[2] l[3]),A(r[3] l[4]),A(r[4] l[5] m[7]),A(r[5] l[6]),A(r[6] l[.])'
+    ring = "A(r[.] l[1]),A(r[1] l[2] m[7]),A(r[2] l[3]),A(r[3] l[4]),A(r[4] l[5] m[7]),A(r[5] l[6]),A(r[6] l[.])"
     c = kamol.KappaComplex(ring)
     print(c.show())
     g = KappaGraph(c)
