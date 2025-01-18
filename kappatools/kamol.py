@@ -11,21 +11,22 @@ import pprint
 import ujson
 from collections import deque
 from collections import defaultdict
+from typing import Any
 
 
 class ParseFail(Exception):
     pass
 
 
-def convert(text):
+def convert(text: str) -> int | str:
     return int(text) if text.isdigit() else text
 
 
-def alphanum_key(key):
+def alphanum_key(key) -> list:
     return [convert(c) for c in re.split("([0-9]+)", key)]
 
 
-def bond2type(b):
+def bond2type(b) -> str:
     x = sorted(
         [
             (re.sub(r".\d+.", "", b[0][0]), b[0][1]),
@@ -35,7 +36,7 @@ def bond2type(b):
     return "".join([x[0][0], ".", x[0][1]]), "".join([x[1][0], ".", x[1][1]])
 
 
-def is_number(s):
+def is_number(s: Any) -> bool:
     """
     Tests if 's' is a number
     """
@@ -46,14 +47,16 @@ def is_number(s):
         return False
 
 
-def shift(in_list, n=1):
+def shift(in_list: list, n: int = 1) -> list:
     """
     Shifts a list left (n>0) or right (n<0) in a circular fashion by n positions.
     """
     return in_list[n:] + in_list[:n]
 
 
-def get_identifier(name, delimiters=(".", ".")):
+def get_identifier(
+    name: str, delimiters: tuple[str, str] = (".", ".")
+) -> tuple[str, str]:
     """
     Extracts the label (identifier) from an agent name.
     """
@@ -63,14 +66,14 @@ def get_identifier(name, delimiters=(".", ".")):
     return agent_type, identifier
 
 
-def add_identifier(agent_type, id, delimiters=(".", ".")):
+def add_identifier(agent_type, id, delimiters=(".", ".")) -> str:
     """
     Creates an agent name by joining its type with a label ('id').
     """
     return agent_type + delimiters[0] + id + delimiters[1]
 
 
-def sort_site_and_bond_lists(mol, s="both"):
+def sort_site_and_bond_lists(mol: KappaMolecule, s: str = "both") -> None:
     if s == "both" or s == "site":
         for st in mol.signature.site_types:
             mol.free_site_list[st].sort(key=lambda x: alphanum_key(x[0]))
@@ -87,15 +90,15 @@ def sort_site_and_bond_lists(mol, s="both"):
 
 
 def copy_molecule(
-    X,
-    count=0,
-    id_shift=0,
+    X: KappaMolecule,
+    count: int = 0,
+    id_shift: int = 0,
     system=None,
     signature=None,
     views=None,
     nav=True,
-    canon=True,
-):
+    canon: bool = True,
+) -> KappaMolecule:
     """
     'Deep copies' a KappaMolecule by using a temporary deep-copy of the agent dictionary to generate
     a new KappaMolecule. This is simpler than attempting to deep-copy the KappaMolecule structure
@@ -245,7 +248,7 @@ class Kappa:
             r"(?:" + self.sID + r")?(?:" + self.symbols + r")" + r"\([^()]*\)"
         )
 
-    def parser(self, kappa_string, start_label=1):
+    def parser(self, kappa_string: str, start_label: int = 1) -> dict[str]:
         self.label_counter = start_label - 1
         self.agents = {}
 
@@ -272,7 +275,7 @@ class Kappa:
 
         return self.agents
 
-    def parse_agent(self, agent_expression):
+    def parse_agent(self, agent_expression: str) -> tuple:
         match = self.agent_re.match(agent_expression)
         if not match:
             sys.exit("Invalid agent declaration <" + agent_expression + ">")
@@ -298,7 +301,7 @@ class Kappa:
 
         return agent_type, identifier, agent_sID, interface
 
-    def parse_site(self, site_expression):
+    def parse_site(self, site_expression: str) -> tuple:
         match = self.site_re.match(site_expression)
         if not match:
             sys.exit("Could not parse site " + site_expression)
@@ -323,7 +326,7 @@ class Kappa:
 
         return site_name, internal_state, binding_state
 
-    def decode(self, canon, views):
+    def decode(self, canon: str, views):
         """
         Converts a canonical form into a standard kappa expression.
         """
@@ -441,7 +444,9 @@ class Kappa:
         return ex[:-2]
 
 
-def Canonical2Expression(canonical, views, nav=True, canon=True):
+def Canonical2Expression(
+    canonical: str, views, nav: bool = True, canon: bool = True
+) -> KappaExpression:
     """
     Wrapper for creating a Kappa molecule from a canonical form.
     """
@@ -454,7 +459,9 @@ def Canonical2Expression(canonical, views, nav=True, canon=True):
     return expression
 
 
-def Kappa2Expression(k_expression, id_shift=0, nav=True, canon=True):
+def Kappa2Expression(
+    k_expression: str, id_shift: int = 0, nav: bool = True, canon: bool = True
+) -> KappaExpression:
     """
     Wrapper for creating an object from an expression.
     """
@@ -468,14 +475,14 @@ def Kappa2Expression(k_expression, id_shift=0, nav=True, canon=True):
 
 
 def KappaComplex(
-    k_expression,
-    count=0,
-    id_shift=0,
+    k_expression: str,
+    count: int = 0,
+    id_shift: int = 0,
     system=None,
     signature=None,
     views={},
-    nav=True,
-    canon=True,
+    nav: bool = True,
+    canon: bool = True,
 ):
     """
     Wrapper for creating a Kappa molecule from an expression.
@@ -525,7 +532,14 @@ class KappaExpression:
         * all types are string, except when otherwise noted.
     """
 
-    def __init__(self, agents=None, id_shift=0, nav=False, canon=False, init=True):
+    def __init__(
+        self,
+        agents=None,
+        id_shift: int = 0,
+        nav: bool = False,
+        canon: bool = False,
+        init: bool = True,
+    ):
 
         # change these definitions only if you know what you are doing
         self.bond_sep = "@"
@@ -568,7 +582,7 @@ class KappaExpression:
         if init:
             self.initializeExpression(canon=self.canon, nav=self.nav)
 
-    def initializeExpression(self, canon=False, nav=False):
+    def initializeExpression(self, canon: bool = False, nav: bool = False) -> None:
         # size
         self.size = len(self.agents)
 
@@ -610,7 +624,7 @@ class KappaExpression:
             # assemble the navigation list for embeddings
             self.make_navigation_list()
 
-    def stubbify_bonds(self, id_shift=0, normalize=True):
+    def stubbify_bonds(self, id_shift: int = 0, normalize: bool = True) -> None:
         """
         Replaces bond labels with bond stubs.
         """
@@ -626,7 +640,7 @@ class KappaExpression:
 
         # sort_site_and_bond_lists(self)
 
-    def stubbify_bonds_no_shift(self):
+    def stubbify_bonds_no_shift(self) -> None:
         """
         Replaces numeric bond labels with unique bond stubs.
         For example, A.14.(b[2]), Z.3.(j[2]) becomes A.14.(b[Z.3.@j]), Z.3.(j[A.14.@b]).
@@ -695,7 +709,7 @@ class KappaExpression:
                     self.n_free_sites += 1
             self.agents[name]["info"]["degree"] = degree
 
-    def stubbify_bonds_with_shift(self, id_shift=0, remap=None):
+    def stubbify_bonds_with_shift(self, id_shift: int = 0, remap=None) -> None:
         """
         Replaces numeric bond labels with unique bond stubs much like stubbify_bonds_no_shift(),
         but also executes a label remapping and label shift. Absent a remap and an id_shift,
@@ -850,7 +864,7 @@ class KappaExpression:
                 running_id += 1
                 self.local_view_index[l_view] = running_id
 
-    def make_local_view_lists(self):
+    def make_local_view_lists(self) -> None:
         self.local_views = {}
         for name in self.agents:
             # make lists of agents with the same local view
@@ -862,7 +876,7 @@ class KappaExpression:
             else:
                 self.local_views[lv] = {name: 1}
 
-    def canonicalize(self):
+    def canonicalize(self) -> str:
         """
         Canonicalize the kappa expression.
         """
@@ -881,7 +895,7 @@ class KappaExpression:
         # return the lexicographically smallest
         return min(canonic)
 
-    def traverse(self, node):
+    def traverse(self, node) -> str:
         """
         Makes a DFS traversal and identifies back edges, then constructs the canonical form as
         a sequence of integers that are indices to the local views. Negative integers are back edges
@@ -953,7 +967,7 @@ class KappaExpression:
 
         return ".".join(canonic)
 
-    def make_adjacency_lists(self):
+    def make_adjacency_lists(self) -> None:
         """
         Construct adjacency lists for each agent
         """
@@ -967,7 +981,7 @@ class KappaExpression:
             ]
             self.adjacency[name1] = adjacency
 
-    def make_navigation_list(self):
+    def make_navigation_list(self) -> None:
         # self.navigation[(a1, a2)] contains a site of a1 that anchors a bond to a2
         # (For the purpose of this array, we don't care about multiple bonds between the same agents.)
         # This is similar to self.bonds, but organized as a dictionary for convenience.
@@ -979,14 +993,14 @@ class KappaExpression:
             self.navigation[(a1, a2)] = s1
             self.navigation[(a2, a1)] = s2
 
-    def shift_ids(self, id_shift=0):
+    def shift_ids(self, id_shift: int = 0) -> dict:
         remapping = {}
         for name in self.agents:
             ident = self.agents[name]["info"]["id"]
             remapping[ident] = str(int(ident) + id_shift)
         return remapping
 
-    def normalize_ids(self, id_shift=0):
+    def normalize_ids(self, id_shift: int = 0) -> dict:
         remapping = {}
         i = 1
         for name in self.agents:
@@ -994,7 +1008,7 @@ class KappaExpression:
             i += 1
         return remapping
 
-    def randomize_ids(self):
+    def randomize_ids(self) -> dict:
         l = [i for i in range(1, len(self.agents) + 1)]
         random.shuffle(l)
         # random.Random(42).shuffle(l)
@@ -1005,11 +1019,11 @@ class KappaExpression:
             i += 1
         return remapping
 
-    def remap_ids(self, remapping):
+    def remap_ids(self, remapping: dict) -> None:
         # wrapper to allow for subclass overriding
         self._remap_ids(remapping)
 
-    def _remap_ids(self, remapping):
+    def _remap_ids(self, remapping: dict) -> None:
         """
         (Re)assigns agent labels (identifiers) using the map 'remapping'.
         """
@@ -1067,7 +1081,7 @@ class KappaExpression:
 
         self.agents = renamed
 
-    def remap(self, change="none", id_shift=0):
+    def remap(self, change: str = "none", id_shift: int = 0) -> None:
         """
         A wrapper for remap_ids() -- of use for external calls; not used in setting up the object.
         'change' = {'none', 'normalize', 'randomize'} directs the construction of the remapping map.
@@ -1106,7 +1120,7 @@ class KappaExpression:
             self.make_local_view_lists()
             self.canonical = self.canonicalize()
 
-    def get_composition(self):
+    def get_composition(self) -> None:
         """
         Get the 'sum formula' of a complex. Agents are ordered in increasing abundance within the complex.
         """
@@ -1127,7 +1141,7 @@ class KappaExpression:
         for a_type in self.composition:
             self.sum_formula += a_type + "{" + str(self.composition[a_type]) + "}"
 
-    def is_multigraph(self):
+    def is_multigraph(self) -> bool:
         """
         Test if the set of bonds implies a multi-graph.
         """
@@ -1139,19 +1153,19 @@ class KappaExpression:
                 s.add((a1, a2))
         return False
 
-    def nodes(self):
+    def nodes(self) -> list:
         """
         Emulates the networkx G.nodes() method returning a list of node names.
         """
         return [k for k in self.agents]
 
-    def order(self):
+    def order(self) -> int:
         """
         Works like __len__. For compatibility with networkx representation.
         """
         return self.size
 
-    def degree(self):
+    def degree(self) -> list:
         """
         Emulates networkx G.degree(), returning a list of (node, degree) pairs
         """
@@ -1162,7 +1176,7 @@ class KappaExpression:
             l += [(name, self.agents[name]["info"]["degree"])]
         return l
 
-    def kappa_expression(self, label=False):
+    def kappa_expression(self, label: bool = False) -> str:
         """
         Converts the internal representation of a kapa molecule into a kappa string
         """
@@ -1206,12 +1220,12 @@ class KappaExpression:
 
     def summary(
         self,
-        internal=False,
-        show_bonds=False,
-        reactivity=False,
+        internal: bool = False,
+        show_bonds: bool = False,
+        reactivity: bool = False,
         db_level=0,
         pp_width=40,
-    ):
+    ) -> str:
         """
         Prints summary of the molecule at various levels of detail.
         """
@@ -1227,7 +1241,7 @@ class KappaExpression:
             info += self.report_bonds(db_level=db_level, pp_width=3)
         return info
 
-    def report_bonds(self, db_level=0, pp_width=40):
+    def report_bonds(self, db_level=0, pp_width=40) -> str:
         """
         Prints the bond types and free site types of the molecule.
         """
@@ -1242,7 +1256,7 @@ class KappaExpression:
                 info += f'{"":>{pp_width}} {b1}<->{b2}\n'
         return info
 
-    def show(self, internal=False, label=False, wrap=-1):
+    def show(self, internal: bool = False, label: bool = False, wrap=-1) -> str:
         """
         Prints the internal representation.
         If internal=False, print the standard kappa expression.
@@ -1299,7 +1313,7 @@ class KappaExpression:
         """
         return self.adjacency[name]
 
-    def show_local_views(self):
+    def show_local_views(self) -> str:
         local_view = {}
         info = ""
         for n in self.agents:
@@ -1342,15 +1356,15 @@ class KappaMolecule(KappaExpression):
     def __init__(
         self,
         agents=None,
-        count=0,
-        id_shift=0,
+        count: bool = 0,
+        id_shift: bool = 0,
         sig=None,
         system=None,
-        s_views={},
-        has_views=False,
-        nav=True,
-        canon=True,
-        init=True,
+        s_views: dict = {},
+        has_views: bool = False,
+        nav: bool = True,
+        canon: bool = True,
+        init: bool = True,
     ):
 
         super().__init__(
@@ -1404,7 +1418,7 @@ class KappaMolecule(KappaExpression):
             self.initializeExpression(canon=False, nav=self.nav)
             self.initializeMolecule()
 
-    def initializeMolecule(self):
+    def initializeMolecule(self) -> None:
         if self.system:
             if self.size >= self.system.size_threshold:
                 # self.canon = False
@@ -1425,7 +1439,7 @@ class KappaMolecule(KappaExpression):
         if self.signature:
             self.internal_reactivity()
 
-    def initialize_light(self):
+    def initialize_light(self) -> None:
         # size
         self.size = len(self.agents)
 
@@ -1459,7 +1473,7 @@ class KappaMolecule(KappaExpression):
         if self.signature:
             self.internal_reactivity()
 
-    def internal_reactivity(self):
+    def internal_reactivity(self) -> None:
         for bt in self.signature.bond_types:
             Xs, Yp = bt
             # internal cycle formation; X.s and Y.p can bind
@@ -1477,7 +1491,7 @@ class KappaMolecule(KappaExpression):
                 self.binding[bt] *= self.system.rc_bond_formation_intra
                 self.unbinding[bt] *= self.system.rc_bond_dissociation[bt]
 
-    def clear_type_lists(self):
+    def clear_type_lists(self) -> None:
         self.free_site_list = {}
         self.free_site_list_idx = {}
         for st in self.signature.site_types:
@@ -1492,7 +1506,7 @@ class KappaMolecule(KappaExpression):
             self.bond_list_idx[bt] = {}
             self.agent_self_binding[bt] = 0
 
-    def stubbify_bonds(self, id_shift=0, normalize=True):
+    def stubbify_bonds(self, id_shift: bool = 0, normalize: bool = True) -> None:
         """
         Replaces bond labels with bond stubs.
         """
@@ -1509,7 +1523,7 @@ class KappaMolecule(KappaExpression):
 
         # sort_site_and_bond_lists(self)
 
-    def stubbify_bonds_no_shift(self):
+    def stubbify_bonds_no_shift(self) -> None:
         """
         Replaces numeric bond labels with unique bond stubs.
         For example, A.14.(b[2]), Z.3.(j[2]) becomes A.14.(b[Z.3.@j]), Z.3.(j[A.14.@b]).
@@ -1612,7 +1626,7 @@ class KappaMolecule(KappaExpression):
 
             self.agents[name]["info"]["degree"] = degree
 
-    def stubbify_bonds_with_shift(self, id_shift=0, remap=None):
+    def stubbify_bonds_with_shift(self, id_shift=0, remap=None) -> None:
         """
         Replaces numeric bond labels with unique bond stubs much like stubbify_bonds_no_shift(),
         but also executes a label remapping and label shift. Absent a remap and an id_shift,
@@ -1753,7 +1767,7 @@ class KappaMolecule(KappaExpression):
             new_agents[new_name]["info"]["degree"] = degree
         self.agents = new_agents
 
-    def remap_ids(self, remapping):
+    def remap_ids(self, remapping: dict) -> None:
         """
         (Re)assigns agent labels (identifiers) using the map 'remapping'.
         Overrides parent class method
@@ -1805,12 +1819,12 @@ class KappaMolecule(KappaExpression):
 
     def summary(
         self,
-        internal=False,
-        show_bonds=False,
-        reactivity=False,
+        internal: bool = False,
+        show_bonds: bool = False,
+        reactivity: bool = False,
         db_level=0,
         pp_width=40,
-    ):
+    ) -> None:
         """
         Prints summary of the molecule at various levels of detail.
         """
@@ -1833,7 +1847,7 @@ class KappaMolecule(KappaExpression):
             info += self.report_internal_reaction_propensities(pp_width=pp_width)
         return info
 
-    def report_bond_types_and_free_sites(self, db_level=0, pp_width=40):
+    def report_bond_types_and_free_sites(self, db_level=0, pp_width=40) -> str:
         """
         Prints the bond types and free site types of the molecule.
         """
@@ -1868,7 +1882,7 @@ class KappaMolecule(KappaExpression):
                 info += f'{"":>{pp_width}} {b1}<->{b2}\n'
         return info
 
-    def report_internal_reaction_propensities(self, pp_width=40):
+    def report_internal_reaction_propensities(self, pp_width=40) -> str:
         """
         Prints the intra-molecular binding propensities of the molecule.
         """
