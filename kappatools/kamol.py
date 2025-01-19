@@ -43,13 +43,6 @@ def is_number(s: Any) -> bool:
         return False
 
 
-def shift(in_list: list, n: int = 1) -> list:
-    """
-    Shifts a list left (n>0) or right (n<0) in a circular fashion by n positions.
-    """
-    return in_list[n:] + in_list[:n]
-
-
 def get_identifier(
     name: str, delimiters: tuple[str, str] = (".", ".")
 ) -> tuple[str, str]:
@@ -497,8 +490,6 @@ class KappaExpression:
                 self.stubbify_bonds_with_shift(id_shift=id_shift)
         else:
             self.stubbify_bonds_with_shift(remap=self.normalize_ids(id_shift=id_shift))
-
-        # sort_site_and_bond_lists(self)
 
     def stubbify_bonds_no_shift(self) -> None:
         """
@@ -1381,8 +1372,6 @@ class KappaMolecule(KappaExpression):
         else:
             self.stubbify_bonds_with_shift(remap=self.normalize_ids(id_shift=id_shift))
 
-        # sort_site_and_bond_lists(self)
-
     def stubbify_bonds_no_shift(self) -> None:
         """
         Replaces numeric bond labels with unique bond stubs.
@@ -1771,22 +1760,6 @@ class KappaMolecule(KappaExpression):
             info = f'\n{"Warning: no signature":>30}'
 
         return info
-
-
-def sort_site_and_bond_lists(mol: KappaMolecule, s: str = "both") -> None:
-    if s == "both" or s == "site":
-        for st in mol.signature.site_types:
-            mol.free_site_list[st].sort(key=lambda x: alphanum_key(x[0]))
-            for i, site in enumerate(mol.free_site_list[st]):
-                mol.free_site_list_idx[st][site] = i  # indices start with 0
-
-    if s == "both" or s == "bond":
-        for bt in mol.signature.bond_types:
-            mol.bond_list[bt].sort(
-                key=lambda x: (alphanum_key(x[0][0]), alphanum_key(x[0][1]))
-            )
-            for i, bond in enumerate(mol.bond_list[bt]):
-                mol.bond_list_idx[bt][bond] = i  # indices start with 0
 
 
 def copy_molecule(
