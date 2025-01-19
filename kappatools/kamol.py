@@ -62,6 +62,22 @@ def add_identifier(agent_type, id, delimiters=(".", ".")) -> str:
     return agent_type + delimiters[0] + id + delimiters[1]
 
 
+def sort_site_and_bond_lists(mol, s="both"):
+    if s == "both" or s == "site":
+        for st in mol.signature.site_types:
+            mol.free_site_list[st].sort(key=lambda x: alphanum_key(x[0]))
+            for i, site in enumerate(mol.free_site_list[st]):
+                mol.free_site_list_idx[st][site] = i  # indices start with 0
+
+    if s == "both" or s == "bond":
+        for bt in mol.signature.bond_types:
+            mol.bond_list[bt].sort(
+                key=lambda x: (alphanum_key(x[0][0]), alphanum_key(x[0][1]))
+            )
+            for i, bond in enumerate(mol.bond_list[bt]):
+                mol.bond_list_idx[bt][bond] = i  # indices start with 0
+
+
 class Kappa:
     """
     A kappa parser based on regular expressions. (Parses correctly correct expressions, but may also parse
