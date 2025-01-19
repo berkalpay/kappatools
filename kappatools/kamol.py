@@ -18,12 +18,8 @@ class ParseFail(Exception):
     pass
 
 
-def convert(text: str) -> int | str:
-    return int(text) if text.isdigit() else text
-
-
-def alphanum_key(key) -> list:
-    return [convert(c) for c in re.split("([0-9]+)", key)]
+def alphanum_key(key: str) -> list:
+    return [int(c) if c.isdigit() else c for c in re.split("([0-9]+)", key)]
 
 
 def bond2type(b) -> str:
