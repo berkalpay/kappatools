@@ -73,112 +73,6 @@ def add_identifier(agent_type, id, delimiters=(".", ".")) -> str:
     return agent_type + delimiters[0] + id + delimiters[1]
 
 
-def sort_site_and_bond_lists(mol: KappaMolecule, s: str = "both") -> None:
-    if s == "both" or s == "site":
-        for st in mol.signature.site_types:
-            mol.free_site_list[st].sort(key=lambda x: alphanum_key(x[0]))
-            for i, site in enumerate(mol.free_site_list[st]):
-                mol.free_site_list_idx[st][site] = i  # indices start with 0
-
-    if s == "both" or s == "bond":
-        for bt in mol.signature.bond_types:
-            mol.bond_list[bt].sort(
-                key=lambda x: (alphanum_key(x[0][0]), alphanum_key(x[0][1]))
-            )
-            for i, bond in enumerate(mol.bond_list[bt]):
-                mol.bond_list_idx[bt][bond] = i  # indices start with 0
-
-
-def copy_molecule(
-    X: KappaMolecule,
-    count: int = 0,
-    id_shift: int = 0,
-    system=None,
-    signature=None,
-    views=None,
-    nav=True,
-    canon: bool = True,
-) -> KappaMolecule:
-    """
-    'Deep copies' a KappaMolecule by using a temporary deep-copy of the agent dictionary to generate
-    a new KappaMolecule. This is simpler than attempting to deep-copy the KappaMolecule structure
-    directly.
-    """
-    agents_copy = ujson.loads(ujson.dumps(X.agents))
-
-    if id_shift == 0:
-        X_copy = KappaMolecule(
-            agents_copy,
-            count=count,
-            id_shift=id_shift,
-            system=system,
-            sig=signature,
-            s_views=views,
-            nav=nav,
-            canon=canon,
-            init=False,
-        )
-
-        # comprehensions are significantly faster than deepcopy()
-        X_copy.composition = {k: v for k, v in X.composition.items()}
-        X_copy.free_site = {k: v for k, v in X.free_site.items()}
-        X_copy.free_site_list = {
-            k: [x for x in X.free_site_list[k]] for k in X.free_site_list
-        }
-        X_copy.free_site_list_idx = {
-            k: {x: v for x, v in X.free_site_list_idx[k].items()}
-            for k in X.free_site_list
-        }
-        X_copy.bond_type = {k: v for k, v in X.bond_type.items()}
-        X_copy.bond_list = {k: [x for x in X.bond_list[k]] for k in X.bond_list}
-        X_copy.bond_list_idx = {
-            k: {x: v for x, v in X.bond_list_idx[k].items()} for k in X.bond_list
-        }
-        X_copy.bonds = {k: v for k, v in X.bonds.items()}
-        X_copy.agent_self_binding = {k: v for k, v in X.agent_self_binding.items()}
-        X_copy.unbinding = {k: v for k, v in X.unbinding.items()}
-        X_copy.binding = {k: v for k, v in X.binding.items()}
-        X_copy.adjacency = {k: [x for x in X.adjacency[k]] for k in X.adjacency}
-        X_copy.type_slice = [k for k in X.type_slice]
-        X_copy.navigation = {k: v for k, v in X.navigation.items()}
-        X_copy.local_views = {
-            k: {x: v for x, v in X.local_views[k].items()} for k in X.local_views
-        }
-        X_copy.canonical = X.canonical
-        X_copy.sum_formula = X.sum_formula
-        X_copy.rarest_type = X.rarest_type
-        X_copy.embedding_anchor = X.embedding_anchor
-        X_copy.size = len(X_copy.agents)
-        # max label
-        X_copy.label_counter = int(
-            get_identifier(next(reversed(X_copy.agents)), delimiters=X_copy.id_sep)[1]
-        )
-    else:
-        X_copy = KappaMolecule(
-            agents_copy,
-            count=count,
-            id_shift=id_shift,
-            system=system,
-            sig=signature,
-            s_views=views,
-            nav=nav,
-            canon=canon,
-            init=False,
-        )
-
-        X_copy.composition = {k: v for k, v in X.composition.items()}
-        X_copy.local_views = {
-            k: {x: v for x, v in X.local_views[k].items()} for k in X.local_views
-        }
-        X_copy.canonical = X.canonical
-        X_copy.sum_formula = X.sum_formula
-        X_copy.rarest_type = X.rarest_type
-
-        X_copy.initialize_light()
-
-    return X_copy
-
-
 class Kappa:
     """
     A kappa parser based on regular expressions. (Parses correctly correct expressions, but may also parse
@@ -442,36 +336,6 @@ class Kappa:
             ex = ex[:-1]
             ex += "), "
         return ex[:-2]
-
-
-def Canonical2Expression(
-    canonical: str, views, nav: bool = True, canon: bool = True
-) -> KappaExpression:
-    """
-    Wrapper for creating a Kappa molecule from a canonical form.
-    """
-    _kappa = Kappa()
-    k_expression = _kappa.decode(canonical, views)
-    expression = KappaExpression(
-        agents=_kappa.parser(k_expression), nav=nav, canon=canon
-    )
-    del _kappa
-    return expression
-
-
-def Kappa2Expression(
-    k_expression: str, id_shift: int = 0, nav: bool = True, canon: bool = True
-) -> KappaExpression:
-    """
-    Wrapper for creating an object from an expression.
-    """
-    # a shortcut for everyday applications
-    _kappa = Kappa()
-    expression = KappaExpression(
-        agents=_kappa.parser(k_expression), id_shift=id_shift, nav=nav, canon=canon
-    )
-    del _kappa
-    return expression
 
 
 def KappaComplex(
@@ -1911,6 +1775,142 @@ class KappaMolecule(KappaExpression):
             info = f'\n{"Warning: no signature":>30}'
 
         return info
+
+
+def sort_site_and_bond_lists(mol: KappaMolecule, s: str = "both") -> None:
+    if s == "both" or s == "site":
+        for st in mol.signature.site_types:
+            mol.free_site_list[st].sort(key=lambda x: alphanum_key(x[0]))
+            for i, site in enumerate(mol.free_site_list[st]):
+                mol.free_site_list_idx[st][site] = i  # indices start with 0
+
+    if s == "both" or s == "bond":
+        for bt in mol.signature.bond_types:
+            mol.bond_list[bt].sort(
+                key=lambda x: (alphanum_key(x[0][0]), alphanum_key(x[0][1]))
+            )
+            for i, bond in enumerate(mol.bond_list[bt]):
+                mol.bond_list_idx[bt][bond] = i  # indices start with 0
+
+
+def copy_molecule(
+    X: KappaMolecule,
+    count: int = 0,
+    id_shift: int = 0,
+    system=None,
+    signature=None,
+    views=None,
+    nav=True,
+    canon: bool = True,
+) -> KappaMolecule:
+    """
+    'Deep copies' a KappaMolecule by using a temporary deep-copy of the agent dictionary to generate
+    a new KappaMolecule. This is simpler than attempting to deep-copy the KappaMolecule structure
+    directly.
+    """
+    agents_copy = ujson.loads(ujson.dumps(X.agents))
+
+    if id_shift == 0:
+        X_copy = KappaMolecule(
+            agents_copy,
+            count=count,
+            id_shift=id_shift,
+            system=system,
+            sig=signature,
+            s_views=views,
+            nav=nav,
+            canon=canon,
+            init=False,
+        )
+
+        # comprehensions are significantly faster than deepcopy()
+        X_copy.composition = {k: v for k, v in X.composition.items()}
+        X_copy.free_site = {k: v for k, v in X.free_site.items()}
+        X_copy.free_site_list = {
+            k: [x for x in X.free_site_list[k]] for k in X.free_site_list
+        }
+        X_copy.free_site_list_idx = {
+            k: {x: v for x, v in X.free_site_list_idx[k].items()}
+            for k in X.free_site_list
+        }
+        X_copy.bond_type = {k: v for k, v in X.bond_type.items()}
+        X_copy.bond_list = {k: [x for x in X.bond_list[k]] for k in X.bond_list}
+        X_copy.bond_list_idx = {
+            k: {x: v for x, v in X.bond_list_idx[k].items()} for k in X.bond_list
+        }
+        X_copy.bonds = {k: v for k, v in X.bonds.items()}
+        X_copy.agent_self_binding = {k: v for k, v in X.agent_self_binding.items()}
+        X_copy.unbinding = {k: v for k, v in X.unbinding.items()}
+        X_copy.binding = {k: v for k, v in X.binding.items()}
+        X_copy.adjacency = {k: [x for x in X.adjacency[k]] for k in X.adjacency}
+        X_copy.type_slice = [k for k in X.type_slice]
+        X_copy.navigation = {k: v for k, v in X.navigation.items()}
+        X_copy.local_views = {
+            k: {x: v for x, v in X.local_views[k].items()} for k in X.local_views
+        }
+        X_copy.canonical = X.canonical
+        X_copy.sum_formula = X.sum_formula
+        X_copy.rarest_type = X.rarest_type
+        X_copy.embedding_anchor = X.embedding_anchor
+        X_copy.size = len(X_copy.agents)
+        # max label
+        X_copy.label_counter = int(
+            get_identifier(next(reversed(X_copy.agents)), delimiters=X_copy.id_sep)[1]
+        )
+    else:
+        X_copy = KappaMolecule(
+            agents_copy,
+            count=count,
+            id_shift=id_shift,
+            system=system,
+            sig=signature,
+            s_views=views,
+            nav=nav,
+            canon=canon,
+            init=False,
+        )
+
+        X_copy.composition = {k: v for k, v in X.composition.items()}
+        X_copy.local_views = {
+            k: {x: v for x, v in X.local_views[k].items()} for k in X.local_views
+        }
+        X_copy.canonical = X.canonical
+        X_copy.sum_formula = X.sum_formula
+        X_copy.rarest_type = X.rarest_type
+
+        X_copy.initialize_light()
+
+    return X_copy
+
+
+def Canonical2Expression(
+    canonical: str, views, nav: bool = True, canon: bool = True
+) -> KappaExpression:
+    """
+    Wrapper for creating a Kappa molecule from a canonical form.
+    """
+    _kappa = Kappa()
+    k_expression = _kappa.decode(canonical, views)
+    expression = KappaExpression(
+        agents=_kappa.parser(k_expression), nav=nav, canon=canon
+    )
+    del _kappa
+    return expression
+
+
+def Kappa2Expression(
+    k_expression: str, id_shift: int = 0, nav: bool = True, canon: bool = True
+) -> KappaExpression:
+    """
+    Wrapper for creating an object from an expression.
+    """
+    # a shortcut for everyday applications
+    _kappa = Kappa()
+    expression = KappaExpression(
+        agents=_kappa.parser(k_expression), id_shift=id_shift, nav=nav, canon=canon
+    )
+    del _kappa
+    return expression
 
 
 # -------------------------------------------------------------------------------------------
