@@ -1,6 +1,6 @@
 import pytest
 
-from kappatools import kasnap, kamol, kamatch
+from kappatools import kasnap, kamol, kamatch, kagraph
 
 
 @pytest.fixture
@@ -15,6 +15,22 @@ def example_complex(example_mixture):
 
 def test_complex_size(example_complex):
     assert example_complex.size == 43
+
+
+def test_decode_isomorphic(example_complex):
+    decoded_data = kamol.Kappa().decode(
+        example_complex.canonical, example_complex.system_views
+    )
+    decoded_complex = kamol.KappaComplex(decoded_data)
+    assert kamatch.SiteGraphMatcher().isomorphic(example_complex, decoded_complex)
+
+
+def test_cycle():
+    complex = kamol.KappaComplex(
+        "A(r[6] l[1]),A(r[1] l[2]),A(r[2] l[3]),A(r[3] l[4]),A(r[4] l[5]),A(r[5] l[6])"
+    )
+    cycle = kagraph.KappaGraph(complex).get_cycle()
+    assert len(cycle) == 6
 
 
 def test_kamol():
